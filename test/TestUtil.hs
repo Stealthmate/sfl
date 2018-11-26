@@ -1,12 +1,7 @@
 module TestUtil where
 
-import           Control.Monad
 import           Control.Monad.State.Lazy
-import           Data.Either
-import qualified Data.Text                as Text
 import           Debug.Trace
-import           SFL.Lexer
-import           SFL.Parser
 import           SFL.Type
 import           Text.Megaparsec
 

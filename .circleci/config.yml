@@ -1,0 +1,35 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: haskell:8.4.3
+    steps:
+      - checkout
+      - run:
+          name: generate src checksum
+          command: |
+            find ./src -type f -exec sha256sum {} \; | sort > ./hash.txt
+            cat ./hash.txt
+      - restore_cache: &restore_cache_stack_deps
+          key: 'dependencies-v1-'
+
+      - run: stack install hlint
+      - run: make build-deps-test
+
+      - save_cache: &save_cache_stack_deps
+          key: 'dependencies-v1-{{ checksum "stack.yaml" }}-{{ checksum "package.yaml" }}'
+          paths:
+          - ~/.stack/
+          - ./.stack-work/
+
+      - restore_cache: &restore_cache_project
+          key: 'project-v1-'
+
+      - run:
+          name: run-tests-all
+          command: TERM=dumb make run-tests-all
+
+      - save_cache: &save_cache_project
+          key: 'project-v1-{{ checksum "hash.txt" }}'
+          paths:
+          - ./.stack-work/

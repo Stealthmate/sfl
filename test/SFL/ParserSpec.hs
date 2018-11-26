@@ -1,9 +1,7 @@
+{-# LANGUAGE TypeFamilies #-}
 module SFL.ParserSpec where
 
-import           Control.Monad
-import           Control.Monad.State.Lazy
 import           Data.Either
-import qualified Data.Text                as Text
 import           SFL.Parser
 import           SFL.Printer
 import           SFL.Type
@@ -11,7 +9,6 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck
 import           TestUtil
-import           Text.Megaparsec
 
 instance Typed () where
   typeOf () = StringType
@@ -36,9 +33,10 @@ parse'' = flip parse' (SflParseState functions :: SflParseState ())
 instance Arbitrary Literal where
   arbitrary = do
     n <- elements [0..1]
-    case n `rem` 2 of
+    case n of
       0 -> StringL <$> pure "test"
       1 -> NumberL <$> arbitrary
+      _ -> error "wtf"
 
 instance (Arbitrary a, RecordField a) => Arbitrary (Expr a) where
   arbitrary = frequency [(1, record'), (1, literal'), (5, func'), (5, infix')]

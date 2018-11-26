@@ -8,7 +8,7 @@ module SFL.Type where
 
 import qualified Control.Monad.State.Lazy as ST
 import           Data.Data                hiding (typeOf)
-import           Data.Typeable            hiding (typeOf)
+import           Data.Typeable            ()
 import           Text.Megaparsec
 
 -- Megaparsec
@@ -27,7 +27,6 @@ data CustomParseError =
   | WrongType ValueType ValueType
   | BadNumberOfArguments String Int Int
   | NakedInfixInsideFunction
-  | EndResultIsNotBool
   deriving (Eq, Data, Typeable, Ord, Read, Show)
 instance ShowErrorComponent CustomParseError where
   showErrorComponent NakedInfixInsideFunction = "Naked infix inside function"

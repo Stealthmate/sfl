@@ -1,21 +1,17 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 module SFL.LexerSpec where
 
-import           Control.Monad
-import           Control.Monad.State.Lazy
-import SFL.Const
-import           Data.Either
-import           Data.Maybe
-import qualified Data.Set as Set
-import qualified Data.Text                as Text
+import           Data.Either           (isLeft)
+import qualified Data.Set              as Set
+import           SFL.Const
 import           SFL.Lexer
 import           SFL.Type
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
-import qualified Test.QuickCheck as QC
+import qualified Test.QuickCheck       as QC
 import           TestUtil
-import           Text.Megaparsec
 
 quote :: String -> String
 quote s = "\"" <> s <> "\""

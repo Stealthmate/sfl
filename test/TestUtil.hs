@@ -1,4 +1,4 @@
-module SFL.Util where
+module TestUtil where
 
 import           Control.Monad.State.Lazy
 import           Debug.Trace
@@ -11,3 +11,8 @@ parse' p init arg =
   in case res of
     Right r -> Right r
     Left e  -> Left $ trace (errorBundlePretty e) $ errorBundlePretty e
+
+litd = LiteralE . NumberL
+litn = LiteralE . NumberL . fromIntegral
+lits = LiteralE . StringL
+

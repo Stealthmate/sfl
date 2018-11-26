@@ -2,7 +2,7 @@ module SFL.Evaluator where
 
 import           SFL.Type
 
-eval :: Record a => RecordOf a -> Expr a -> Value
+eval :: RecordField a => RecordOf a -> Expr a -> Value
 eval record (RecordE r) = recordValue record r
 eval record (LiteralE l) =
   case l of
@@ -11,7 +11,7 @@ eval record (LiteralE l) =
 eval record (FunctionE f args) = fOp f $ eval record <$> args
 eval record (InfixE f (a1, a2)) = fOp f [eval record a1, eval record a2]
 
-compile :: Record a => Expr a -> Program a
+compile :: RecordField a => Expr a -> Program a
 compile (RecordE r) = flip recordValue r
 compile (LiteralE l) = \_ ->
   case l of

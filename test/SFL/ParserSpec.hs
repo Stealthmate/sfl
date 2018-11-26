@@ -3,40 +3,42 @@ module SFL.ParserSpec where
 
 import           Data.Either
 import           SFL.Parser
+import           SFL.Printer
 import           SFL.Type
-import           SFL.Util
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck
+import           TestUtil
 
 instance Typed () where
   typeOf () = StringType
-instance Record () where
+instance RecordField () where
   type RecordOf () = ()
   toRecordId () = "test"
   fromRecordId "test" = Just ()
   fromRecordId _      = Nothing
-  recordValue _ _ = StringV "test"
+  recordValue () () = StringV "()"
 
-testF = Function "tf" ([NumberType, NumberType], NumberType) (\[NumberV x] -> NumberV x) 7
-testF2 = Function "tf2" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV x) 7
-plus = Function "+" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV $ x + y) 6
-mult = Function "*" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV $ x * y) 7
-lessThan = Function "<" ([NumberType, NumberType], BoolType) (\[NumberV x, NumberV y] -> BoolV $ x < y) 5
-
-functions = [testF, testF2, lessThan, plus, mult]
+functions@[tf, tf2, plus, mult, lessThan, minus] =
+  [ Function "tf" ([NumberType, NumberType], NumberType) (\[NumberV x] -> NumberV x) 7
+  , Function "tf2" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV x) 7
+  , Function "+" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV $ x + y) 6
+  , Function "*" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV $ x * y) 7
+  , Function "<" ([NumberType, NumberType], BoolType) (\[NumberV x, NumberV y] -> BoolV $ x < y) 5
+  , Function "-" ([NumberType, NumberType], BoolType) (\[NumberV x, NumberV y] -> NumberV $ x - y) 5
+  ]
 
 parse'' = flip parse' (SflParseState functions :: SflParseState ())
 
 instance Arbitrary Literal where
   arbitrary = do
-    n <- arbitrary :: Gen Word
-    case n `rem` 2 of
+    n <- elements [0..1]
+    case n of
       0 -> StringL <$> pure "test"
-      1 -> NumberL . abs <$> arbitrary
-      _ -> error "what"
+      1 -> NumberL <$> arbitrary
+      _ -> error "wtf"
 
-instance (Arbitrary a, Record a) => Arbitrary (Expr a) where
+instance (Arbitrary a, RecordField a) => Arbitrary (Expr a) where
   arbitrary = frequency [(1, record'), (1, literal'), (5, func'), (5, infix')]
     where
       record' = RecordE <$> arbitrary
@@ -50,39 +52,37 @@ instance (Arbitrary a, Record a) => Arbitrary (Expr a) where
       infix' = do
         f <- elements functions
         [a1, a2] <- sequence [arbitrary, arbitrary]
-        pure $ InfixE f (LiteralE $ NumberL a1, LiteralE $ NumberL a2)
-
-exprIt e p = it e . p $ parse'' expr e
+        pure $ InfixE f (litd a1, litd a2)
 
 spec :: Spec
 spec = do
+  let exprIt e p = it e . p $ parse'' expr e
   describe "specific" $ do
-    let exprIt' s p = exprIt s (`shouldBe` p)
-    exprIt' "1 + (2)" $ Right (InfixE plus (LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0))
-    exprIt' "1 + 2 + 3" $ Right (InfixE plus (LiteralE $ NumberL 1.0, InfixE plus (LiteralE $ NumberL 2.0, LiteralE $ NumberL 3.0)))
-    exprIt' "1 * (2) + 3" $ Right (InfixE plus (InfixE mult (LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0), LiteralE $ NumberL 3.0))
-    exprIt' "(1 + 2) + 3" $ Right (InfixE plus (InfixE plus (LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0), LiteralE $ NumberL 3.0))
-    exprIt' "(1 + 2 + 3)" $ Right (InfixE plus (LiteralE $ NumberL 1.0, InfixE plus (LiteralE $ NumberL 2.0, LiteralE $ NumberL 3.0)))
-    exprIt' "((1 + 2) + 3)" $ Right (InfixE plus (InfixE plus (LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0), LiteralE $ NumberL 3.0))
-    exprIt' "(tf 1 2) + 3" $ Right (InfixE plus (FunctionE testF [LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0], LiteralE $ NumberL 3.0))
-    exprIt' "tf 1 2 + 3" $ Right (InfixE plus (FunctionE testF [LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0], LiteralE $ NumberL 3.0))
-    exprIt' "tf (1 + 2) 3" $ Right $ FunctionE testF [InfixE plus (LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0), LiteralE $ NumberL 3.0]
-  describe "fail" $ do
+    let exprIt' s e = exprIt s (`shouldBe` Right e)
+    describe "simple" $ do
+      exprIt' "1" $ litn 1
+      exprIt' "test" $ RecordE ()
+      exprIt' "tf 1 2" $ FunctionE tf [litn 1, litn 2]
+      exprIt' "1 + 2" $ InfixE plus (litn 1, litn 2)
+      exprIt' "1 - -2" $ InfixE minus (litn 1, litn (-2))
+      exprIt' "1 `tf` -2" $ InfixE tf (litn 1, litn (-2))
+    describe "nested" $ do
+      exprIt' "1 + (2)" $ InfixE plus (litn 1, litn 2)
+      exprIt' "1 + 2 + 3" $ InfixE plus (litn 1, InfixE plus (litn 2, litn 3))
+      exprIt' "(1 + 2 + 3)" $ InfixE plus (litn 1, InfixE plus (litn 2, litn 3))
+      exprIt' "1 * (2) + 3" $ InfixE plus (InfixE mult (litn 1, litn 2), litn 3)
+      exprIt' "(1 + 2) + 3" $ InfixE plus (InfixE plus (litn 1, litn 2), litn 3)
+      exprIt' "((1 + 2) + 3)" $ InfixE plus (InfixE plus (litn 1, litn 2), litn 3)
+      exprIt' "(tf 1 2) + 3" $ InfixE plus (FunctionE tf [litn 1, litn 2], litn 3)
+      exprIt' "tf 1 2 + 3" $ InfixE plus (FunctionE tf [litn 1, litn 2], litn 3)
+      exprIt' "tf (1 + 2) 3" $ FunctionE tf [InfixE plus (litn 1, litn 2), litn 3]
+  describe "fail - bad syntax" $ do
     let failIt = flip exprIt (`shouldSatisfy` isLeft)
     failIt "tf 1 + 2 3"
-  describe "expr" $ do
-    it "parses literal" $ do
-      let parseL s l = parse'' expr s `shouldBe` Right (LiteralE l)
-      parseL "1.0" (NumberL 1.0)
-      parseL "\"asd\"" (StringL "asd")
-    it "simple" $ do
-      parse'' expr "1 < 3" `shouldBe` Right (InfixE lessThan (LiteralE $ NumberL 1.0, LiteralE $ NumberL 3.0))
-      parse'' expr "tf 1 2" `shouldBe` Right (FunctionE testF [LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0])
-      parse'' expr "1 `tf2` 2" `shouldBe` Right (InfixE testF2 (LiteralE $ NumberL 1.0, LiteralE $ NumberL 2.0))
-    it "does not parse bad typed expr" $
-      parse'' expr "1 < 3 + \"asdasd\"" `shouldSatisfy` isLeft
-    it "does not parse expr with few arguments" $
-      parse'' expr "tf 1" `shouldSatisfy` isLeft
-    prop "arbitrary expr" . withMaxSuccess 10000 $ \e -> do
-      print $ printExpr' e
-      parse'' expr (printExpr' e) `shouldBe` Right e
+    failIt "1 --2"
+  describe "fail - bad type" $ do
+    let failIt = flip exprIt (`shouldSatisfy` isLeft)
+    failIt "1 < 3 + \"asdasd\""
+    failIt "tf 1"
+  prop "arbitrary expr" . withMaxSuccess 5000 $ \e ->
+    parse'' expr (printExpr e) `shouldBe` Right e

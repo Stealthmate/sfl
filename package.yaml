@@ -25,6 +25,11 @@ dependencies:
 - megaparsec >= 7
 - parser-combinators
 - mtl
+- containers
+
+default-extensions:
+- TypeFamilies
+- FlexibleInstances
 
 library:
   source-dirs: src

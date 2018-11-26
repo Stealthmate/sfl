@@ -14,9 +14,6 @@ data MyRecord = MyRecord
 
 $(deriveRecordField ''MyRecord)
 
-instance Typed RecordFieldMyRecord where
-  typeOf F1 = StringType
-  typeOf F2 = NumberType
 instance RecordField RecordFieldMyRecord where
   type RecordOf RecordFieldMyRecord = MyRecord
   fromRecordId "f1" = Just F1

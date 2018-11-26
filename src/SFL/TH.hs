@@ -4,6 +4,7 @@ module SFL.TH where
 import           Control.Monad
 import           Control.Monad.IO.Class
 import           Language.Haskell.TH
+import Debug.Trace
 import           SFL.Type
 import Text.Casing
 
@@ -18,7 +19,7 @@ deriveRecordField r = do
 
   let recordFieldTypeName = mkName $ "RecordField" ++ nameBase r
   recordFields <- forM fields $ \(n,t) -> do
-    let constructor = makeRecordFieldConstructor n
+    let name = makeRecordFieldConstructorName n
         stringName = show n
     (valueType, isInt) <- case t of
       ConT n' -> do
@@ -27,10 +28,23 @@ deriveRecordField r = do
           | isNum -> pure ('NumberType, isInt)
           | t == ConT ''String -> pure ('StringType, False)
       _ -> fail $ "Expected simple type for field " ++ show n
-    pure (constructor, stringName, valueType, isInt)
+    pure (name, stringName, valueType, isInt)
   
 
-  let decRecordField cons = DataD [] recordFieldTypeName [] Nothing cons [DerivClause Nothing [ConT ''Enum, ConT ''Bounded]]
-  pure [decRecordField $ (\(c,_,_,_) -> c) <$> recordFields]
+  let decInstanceTyped = InstanceD Nothing [] (ConT recordFieldTypeName) 
+
+
+
+  pure
+    [ mkDecRecordField $ (\(c,_,_,_) -> NormalC c []) <$> recordFields
+    , mkInstanceTyped recordFields
+    ]
   where
-    makeRecordFieldConstructor fieldName = NormalC (mkName . pascal $ nameBase fieldName) []
+    recordFieldTypeName = mkName $ "RecordField" ++ nameBase r
+    mkDecRecordField cons = DataD [] recordFieldTypeName [] Nothing cons [DerivClause Nothing [ConT ''Enum, ConT ''Bounded]]
+    mkInstanceTyped xs =
+      let clause x t = Clause [ ConP x [] ] (NormalB (ConE t)) []
+          instanceD =  InstanceD Nothing [] (AppT (ConT ''Typed) $ ConT recordFieldTypeName)
+      in instanceD [FunD (mkName $ nameBase 'typeOf) [clause x t | (x,_,t,_) <- xs]]
+    makeRecordFieldConstructorName fieldName = mkName . pascal $ nameBase fieldName
+    trace' x = trace (show x) x

@@ -16,3 +16,8 @@ parse' p init arg =
   in case res of
     Right r -> Right r
     Left e  -> Left $ trace (errorBundlePretty e) $ errorBundlePretty e
+
+litd = LiteralE . NumberL
+litn = LiteralE . NumberL . fromIntegral
+lits = LiteralE . StringL
+

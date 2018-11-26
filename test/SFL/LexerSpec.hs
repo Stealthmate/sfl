@@ -4,13 +4,16 @@ module SFL.LexerSpec where
 
 import           Control.Monad
 import           Control.Monad.State.Lazy
+import SFL.Const
 import           Data.Either
 import           Data.Maybe
+import qualified Data.Set as Set
 import qualified Data.Text                as Text
 import           SFL.Lexer
 import           SFL.Type
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
+import qualified Test.QuickCheck as QC
 import           TestUtil
 import           Text.Megaparsec
 
@@ -19,25 +22,42 @@ quote s = "\"" <> s <> "\""
 
 escape = filter (/= '\\')
 
-data TestRecord = A | B | C deriving (Enum, Bounded, Show, Eq)
+data TestRecord = A | B deriving (Enum, Bounded, Show, Eq)
 instance Typed TestRecord where
   typeOf _ = StringType
 instance RecordField TestRecord where
   type RecordOf TestRecord = TestRecord
   fromRecordId "a" = Just A
   fromRecordId "b" = Just B
-  fromRecordId "c" = Just C
   fromRecordId _   = Nothing
   toRecordId A = "a"
   toRecordId B = "b"
-  toRecordId C = "c"
-  recordValue r = StringV . show . id
+  recordValue r = StringV . show
+
+newtype OperatorString = OperatorString String deriving (Eq, Show)
+instance QC.Arbitrary OperatorString where
+  arbitrary = do
+    s <- QC.sublistOf (Set.toList operatorAlphabet) `QC.suchThat` (not . null)
+    s' <- QC.shuffle s
+    pure $ OperatorString s'
 
 parse'' = flip parse' (SflParseState [] :: SflParseState TestRecord)
 parseIt s pred p = it s . pred $ parse'' p s
 
 spec :: Spec
 spec = do
+  describe "recordId" $ do
+    let ridIt s p = parseIt s p recordId
+    describe "id" $ do
+      let ridIt' r = ridIt (toRecordId r) (`shouldBe` Right r)
+      ridIt' A
+      ridIt' B
+    describe "fail" $ do
+      let failIt = flip ridIt (`shouldSatisfy` isLeft)
+      failIt "aasdasd"
+      failIt "asd "
+      failIt "`1asdasd`"
+
   describe "literal" $ do
     let litIt s p = parseIt s p literal
     describe "string" $ do
@@ -56,6 +76,7 @@ spec = do
       failIt "asd123"
       failIt "asd\"sdasd"
       failIt "asd\"sdasd"
+
   describe "identifier" $ do
     let idIt s p = parseIt s p identifier
     describe "function name" $ do
@@ -68,20 +89,7 @@ spec = do
       let failIt = flip idIt (`shouldSatisfy` isLeft)
       failIt "\\asd"
       failIt "12asd"
-  describe "recordId" $ do
-    let ridIt s p = parseIt s p recordId
-    describe "id" $ do
-      let ridIt' r = ridIt (toRecordId r) (`shouldBe` Right r)
-      ridIt' A
-      ridIt' B
-      ridIt' C
-    describe "fail" $ do
-      let failIt = flip ridIt (`shouldSatisfy` isLeft)
-      failIt "aasdasd"
-      failIt "asd "
-      failIt "`1asdasd`"
-  describe "infixFunction" $ do
-    it "parses an operator" $
-      parse'' infixFunction "+" `shouldBe` Right (OperatorInf "+")
-    it "parses a function" $
-      parse'' infixFunction "`test`" `shouldBe` Right (FunctionInf "test")
+
+  describe "infixFunction" $
+    prop "operator" $ \(OperatorString s) ->
+      parse'' infixFunction s `shouldBe` Right (OperatorInf s)

@@ -8,7 +8,6 @@ import           Control.Monad.State.Lazy
 import           Data.List
 import           Data.Maybe
 import           Debug.Trace
-import           SFL.Instance
 import           SFL.Lexer
 import           SFL.Type                   as SFLPT
 import           Text.Megaparsec

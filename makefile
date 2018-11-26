@@ -46,7 +46,7 @@ run-doctest:
 run-tests: build-test
 	$(STACK_TEST) test --test-arguments=--fail-fast
 
-run-tests-all: run-hlint run-doctest run-tests
+run-tests-all: run-hlint run-tests
 
 ## Dev
 # Note: GHCi supports only a single option for ghc

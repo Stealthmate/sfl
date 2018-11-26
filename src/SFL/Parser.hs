@@ -5,14 +5,10 @@
 module SFL.Parser where
 
 import           Control.Monad.State.Lazy
-import           Data.List
 import           Data.Maybe
-import           Debug.Trace
 import           SFL.Lexer
-import           SFL.Type                   as SFLPT
+import           SFL.Type                 as SFLPT
 import           Text.Megaparsec
-import           Text.Megaparsec.Char
-import           Text.Megaparsec.Char.Lexer hiding (space)
 
 
 checkName :: String -> SFLP b Function
@@ -36,6 +32,7 @@ typeCheck (InfixE f (x1, x2)) =
       (e, a) <- zip [t1, t2] [typeOf x1, typeOf x2]
       pure . when (e /= a) $ customFailure (WrongType e a)
     _ -> customFailure $ BadNumberOfArguments (fName f) 2 (nArgs f)
+typeCheck _ = pure ()
 
 
 

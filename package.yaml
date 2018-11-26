@@ -34,6 +34,7 @@ default-extensions:
 - MultiWayIf
 - TypeFamilies
 - FlexibleInstances
+- RecordWildCards
 
 library:
   source-dirs: src

@@ -11,7 +11,6 @@ data MyRecord = MyRecord
   { f1 :: String
   , f2 :: Int
   }
-
 $(deriveRecordField ''MyRecord)
 
 spec :: Spec

@@ -2,9 +2,9 @@
 module SFL.EvaluatorSpec where
 
 import           SFL.Evaluator
+import           SFL.TH
 import           SFL.Type
 import           Test.Hspec
-import SFL.TH
 import           TestUtil
 
 data MyRecord = MyRecord
@@ -13,16 +13,6 @@ data MyRecord = MyRecord
   }
 
 $(deriveRecordField ''MyRecord)
-
-instance RecordField RecordFieldMyRecord where
-  type RecordOf RecordFieldMyRecord = MyRecord
-  fromRecordId "f1" = Just F1
-  fromRecordId "f2" = Just F2
-  fromRecordId _    = Nothing
-  toRecordId F1 = "f1"
-  toRecordId F2 = "f2"
-  recordValue r F1 = StringV $ f1 r
-  recordValue r F2 = NumberV . fromIntegral $ f2 r
 
 spec :: Spec
 spec =

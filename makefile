@@ -52,7 +52,7 @@ run-tests-all: run-hlint run-doctest run-tests
 # Note: GHCi supports only a single option for ghc
 # GHCI_OPTIONS=--ghc-options="-j" --ghc-options="-Wunused-imports" --ghc-options="-Wincomplete-patterns" --ghc-options="-Wunused-binds"
 RUN_GHCI=$(STACK) ghci $(GHCI_OPTIONS)
-RUN_GHCI_TEST=$(STACK_TETS) ghci
+RUN_GHCI_TEST=$(STACK_TEST) ghci
 run-ghci: docker
 	$(RUN_GHCI)
 

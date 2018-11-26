@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import           SFL
 
 main :: IO ()
-main = someFunc
+main = pure ()

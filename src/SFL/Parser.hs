@@ -7,7 +7,6 @@ module SFL.Parser where
 import           Control.Monad.State.Lazy
 import           Data.List
 import           Data.Maybe
-import qualified DB.Table.Journal           as Journal
 import           Debug.Trace
 import           SFL.Lexer
 import           SFL.Type                   as SFLPT

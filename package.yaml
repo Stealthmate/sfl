@@ -21,6 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- text
 - megaparsec >= 7
 - parser-combinators
 - mtl
@@ -49,3 +50,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - sfl
+    - hspec
+    - QuickCheck

@@ -9,7 +9,6 @@ module SFL.Type where
 import           Control.Monad.State.Lazy as ST
 import           Data.Data                hiding (typeOf)
 import           Data.Typeable            hiding (typeOf)
-import qualified DB.Table.Journal         as Journal
 import           Text.Megaparsec
 
 newtype SflParseState a = SflParseState

@@ -6,19 +6,22 @@ import           Data.Either
 import qualified Data.Text                as Text
 import           Data.Word
 import           SFL.Parser
+import           SFL.Printer
 import           SFL.Type
-import           SFL.Util
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck
+import           TestUtil
 import           Text.Megaparsec
 
 instance Typed () where
   typeOf () = StringType
-instance Record () where
+instance RecordField () where
+  type RecordOf () = ()
   toRecordId () = "test"
   fromRecordId "test" = Just ()
   fromRecordId _      = Nothing
+  recordValue () () = StringV "()"
 
 testF = Function "tf" ([NumberType, NumberType], NumberType) (\[NumberV x] -> NumberV x) 7
 testF2 = Function "tf2" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV x) 7
@@ -37,7 +40,7 @@ instance Arbitrary Literal where
       0 -> StringL <$> pure "test"
       1 -> NumberL . abs <$> arbitrary
 
-instance (Arbitrary a, Record a) => Arbitrary (Expr a) where
+instance (Arbitrary a, RecordField a) => Arbitrary (Expr a) where
   arbitrary = frequency [(1, record'), (1, literal'), (5, func'), (5, infix')]
     where
       record' = RecordE <$> arbitrary
@@ -85,5 +88,5 @@ spec = do
     it "does not parse expr with few arguments" $
       parse'' expr "tf 1" `shouldSatisfy` isLeft
     prop "arbitrary expr" . withMaxSuccess 10000 $ \e -> do
-      print $ printExpr' e
-      parse'' expr (printExpr' e) `shouldBe` Right e
+      print $ printExpr e
+      parse'' expr (printExpr e) `shouldBe` Right e

@@ -8,6 +8,7 @@ import           Control.Monad.State.Lazy
 import           Data.List
 import           Data.Maybe
 import           Debug.Trace
+import           SFL.Instance
 import           SFL.Lexer
 import           SFL.Type                   as SFLPT
 import           Text.Megaparsec
@@ -25,7 +26,7 @@ checkName x = do
 nArgs :: Function -> Int
 nArgs = length . fst . fType
 
-typeCheck :: Record a => Expr a -> SFLP a ()
+typeCheck :: RecordField a => Expr a -> SFLP a ()
 typeCheck (FunctionE f args) =
   sequence_ $ do
     (a,e) <- zip args (fst (fType f))
@@ -39,7 +40,7 @@ typeCheck (InfixE f (x1, x2)) =
 
 
 
-expr' :: (Eq a, Record a) => SFLP a (Expr a, Bool)
+expr' :: (Eq a, RecordField a) => SFLP a (Expr a, Bool)
 expr' = do
   mlp <- optional leftParen
   e1 <- case mlp of
@@ -91,5 +92,5 @@ expr' = do
       typeCheck exp
       pure exp
 
-expr :: (Eq a, Record a) => SFLP a (Expr a)
+expr :: (Eq a, RecordField a) => SFLP a (Expr a)
 expr = fst <$> expr'

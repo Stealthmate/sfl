@@ -17,7 +17,7 @@ data MyRecordSpec =
 instance Typed MyRecordSpec where
   typeOf F1 = StringType
   typeOf F2 = NumberType
-instance Record MyRecordSpec where
+instance RecordField MyRecordSpec where
   type RecordOf MyRecordSpec = MyRecord
   fromRecordId "f1" = Just F1
   fromRecordId "f2" = Just F2

@@ -5,7 +5,8 @@ import           Control.Monad
 import           Control.Monad.Combinators
 import           Data.Maybe
 import           Debug.Trace
-import           SFL.Type                   as SFLPT
+import           SFL.Const
+import           SFL.Type                   as SFLT
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
@@ -16,16 +17,10 @@ sc = L.space space1 empty empty
 lexeme :: SFLP a b -> SFLP a b
 lexeme = L.lexeme sc
 
-symbol :: SFLP a SFLPT.Symbol
-symbol = lexeme $ choice
-  [ try (char ')') >> pure RightParenS
-  , char '(' >> pure LeftParenS
-  ]
-
 escapeChar = '\\'
 stringDelimiter = '\"'
 
-literal :: SFLP a SFLPT.Literal
+literal :: SFLP a SFLT.Literal
 literal = lexeme $ choice
   [ StringL <$> try parseString
   , NumberL <$> parseNumber
@@ -41,7 +36,7 @@ literal = lexeme $ choice
       oneOf "\"\\"
 
 
-recordId :: Record a => SFLP a a
+recordId :: RecordField a => SFLP a a
 recordId =
   let x:xs = (\x -> (toRecordId x, x)) <$> enumFromTo minBound maxBound
       cs = parseRid x : (try . parseRid <$> xs)

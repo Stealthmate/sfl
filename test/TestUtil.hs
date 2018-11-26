@@ -1,4 +1,4 @@
-module SFL.Util where
+module TestUtil where
 
 import           Control.Monad
 import           Control.Monad.State.Lazy

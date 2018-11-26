@@ -9,9 +9,9 @@ import           Data.Maybe
 import qualified Data.Text                as Text
 import           SFL.Lexer
 import           SFL.Type
-import           SFL.Util
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
+import           TestUtil
 import           Text.Megaparsec
 
 quote :: String -> String
@@ -22,7 +22,8 @@ escape = filter (/= '\\')
 data TestRecord = A | B | C deriving (Enum, Bounded, Show, Eq)
 instance Typed TestRecord where
   typeOf _ = StringType
-instance Record TestRecord where
+instance RecordField TestRecord where
+  type RecordOf TestRecord = TestRecord
   fromRecordId "a" = Just A
   fromRecordId "b" = Just B
   fromRecordId "c" = Just C
@@ -30,6 +31,7 @@ instance Record TestRecord where
   toRecordId A = "a"
   toRecordId B = "b"
   toRecordId C = "c"
+  recordValue r = StringV . show . id
 
 parse'' = flip parse' (SflParseState [] :: SflParseState TestRecord)
 parseIt s pred p = it s . pred $ parse'' p s

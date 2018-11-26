@@ -1,1 +1,1 @@
-# sfl
+# SFL - Simple Filter Language

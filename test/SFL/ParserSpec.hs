@@ -1,24 +1,22 @@
+{-# LANGUAGE TypeFamilies #-}
 module SFL.ParserSpec where
 
-import           Control.Monad
-import           Control.Monad.State.Lazy
 import           Data.Either
-import qualified Data.Text                as Text
-import           Data.Word
 import           SFL.Parser
 import           SFL.Type
 import           SFL.Util
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck
-import           Text.Megaparsec
 
 instance Typed () where
   typeOf () = StringType
 instance Record () where
+  type RecordOf () = ()
   toRecordId () = "test"
   fromRecordId "test" = Just ()
   fromRecordId _      = Nothing
+  recordValue _ _ = StringV "test"
 
 testF = Function "tf" ([NumberType, NumberType], NumberType) (\[NumberV x] -> NumberV x) 7
 testF2 = Function "tf2" ([NumberType, NumberType], NumberType) (\[NumberV x, NumberV y] -> NumberV x) 7
@@ -36,6 +34,7 @@ instance Arbitrary Literal where
     case n `rem` 2 of
       0 -> StringL <$> pure "test"
       1 -> NumberL . abs <$> arbitrary
+      _ -> error "what"
 
 instance (Arbitrary a, Record a) => Arbitrary (Expr a) where
   arbitrary = frequency [(1, record'), (1, literal'), (5, func'), (5, infix')]

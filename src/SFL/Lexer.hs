@@ -1,10 +1,7 @@
 
 module SFL.Lexer where
 
-import           Control.Monad
 import           Control.Monad.Combinators
-import           Data.Maybe
-import           Debug.Trace
 import           SFL.Type                   as SFLPT
 import           Text.Megaparsec
 import           Text.Megaparsec.Char

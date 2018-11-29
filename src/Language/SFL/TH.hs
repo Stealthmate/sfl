@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module SFL.TH 
+module Language.SFL.TH 
   ( deriveRecordField
   ) where
 
@@ -7,7 +7,7 @@ import           Control.Monad
 import           Control.Monad.IO.Class
 import           Language.Haskell.TH as TH
 import Debug.Trace
-import           SFL.Type
+import           Language.SFL.Type
 import Text.Casing
 
 data FieldInfo = FieldInfo
@@ -82,21 +82,7 @@ deriveRecordField r = do
   pure
     [ deriveDataRecordField recordFieldTypeName recordFields
     , deriveInstanceTyped recordFieldTypeName recordFields
-    , mkInstanceRecordField recordFields
+    , deriveInstanceRecordField r recordFieldTypeName recordFields
     ]
   where
     recordFieldTypeName = mkName $ "RecordField" ++ nameBase r
-    mkInstanceRecordField fis =
-      let mkFromRecordId = 
-            let sn' = LitP . TH.StringL
-            in FunD 'fromRecordId $ 
-              [ Clause [ sn' fiStringName ] (NormalB $ AppE (ConE 'Just) (ConE fiConstructorName)) [] | FieldInfo{..} <- fis ] ++ [ Clause [ WildP ] (NormalB (ConE 'Nothing)) [] ]
-          mkToRecordId = FunD 'toRecordId [ Clause [ ConP fiConstructorName [] ] (NormalB . LitE $ TH.StringL fiStringName) [] | FieldInfo{..} <- fis ]
-          mkRecordOf = TySynInstD ''RecordOf $ TySynEqn [ConT recordFieldTypeName] (ConT r)
-          mkRecordValue =
-            let mkBody FieldInfo{..}
-                  | fiValueType == 'StringType = foldr AppE (VarE $ mkName "r") [ ConE 'StringV, VarE fiName ]
-                  | fiValueType == 'NumberType = foldr AppE (VarE $ mkName "r") [ ConE 'NumberV, VarE $ if fiIsInt then 'fromIntegral else 'id , VarE fiName ]
-                mkClause fi@FieldInfo{..} = Clause [VarP (mkName "r"), ConP fiConstructorName []] (NormalB $ mkBody fi) []
-            in FunD 'recordValue $ mkClause <$> fis
-      in InstanceD Nothing [] (AppT (ConT ''RecordField) $ ConT recordFieldTypeName) [ mkRecordOf, mkFromRecordId, mkToRecordId, mkRecordValue ]

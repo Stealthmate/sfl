@@ -4,7 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE RankNTypes                 #-}
 {-# LANGUAGE TypeFamilies               #-}
-module SFL.Type where
+module Language.SFL.Type where
 
 import qualified Control.Monad.State.Lazy as ST
 import           Data.Data                hiding (typeOf)
@@ -22,13 +22,13 @@ newtype SflParserM b a = SflM { runSflParser :: ST.State (SflParseState b) a }
     , Monad
     , ST.MonadState (SflParseState b))
 
-data CustomParseError =
+data SflParseError =
     UnknownFunction String
   | WrongType ValueType ValueType
   | BadNumberOfArguments String Int Int
   | NakedInfixInsideFunction
   deriving (Eq, Data, Typeable, Ord, Read, Show)
-instance ShowErrorComponent CustomParseError where
+instance ShowErrorComponent SflParseError where
   showErrorComponent NakedInfixInsideFunction = "Naked infix inside function"
   showErrorComponent (UnknownFunction x)  = "Unknown function: " ++ x
   showErrorComponent (WrongType expected actual)        = "Expected expr of type " ++ show expected ++ " but got " ++ show actual
@@ -36,7 +36,7 @@ instance ShowErrorComponent CustomParseError where
 
 
 
-type SFLP a = ParsecT CustomParseError String (SflParserM a)
+type SFLP a = ParsecT SflParseError String (SflParserM a)
 -- END
 
 -- Type classes

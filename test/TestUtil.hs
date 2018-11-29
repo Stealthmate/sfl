@@ -2,7 +2,7 @@ module TestUtil where
 
 import           Control.Monad.State.Lazy
 import           Debug.Trace
-import           SFL.Type
+import           Language.SFL.Type
 import           Text.Megaparsec
 
 parse' :: SFLP s a -> SflParseState s -> String -> Either String a

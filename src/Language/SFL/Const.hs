@@ -1,4 +1,4 @@
-module SFL.Const where
+module Language.SFL.Const where
 
 import           Data.Set
 

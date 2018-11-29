@@ -1,9 +1,9 @@
 
-module SFL.Lexer where
+module Language.SFL.Lexer where
 
 import           Control.Monad.Combinators
-import           SFL.Const
-import           SFL.Type                   as SFLT
+import           Language.SFL.Const
+import           Language.SFL.Type          as SFLT
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L

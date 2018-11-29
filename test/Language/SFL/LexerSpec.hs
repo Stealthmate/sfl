@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies        #-}
-module SFL.LexerSpec where
+module Language.SFL.LexerSpec where
 
 import           Data.Either           (isLeft)
 import qualified Data.Set              as Set
-import           SFL.Const
-import           SFL.Lexer
-import           SFL.Type
+import           Language.SFL.Const
+import           Language.SFL.Lexer
+import           Language.SFL.Type
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import qualified Test.QuickCheck       as QC

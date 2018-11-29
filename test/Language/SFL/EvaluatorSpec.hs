@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
-module SFL.EvaluatorSpec where
+module Language.SFL.EvaluatorSpec where
 
-import           SFL.Evaluator
-import           SFL.TH
-import           SFL.Type
+import           Language.SFL.Evaluator
+import           Language.SFL.TH
+import           Language.SFL.Type
 import           Test.Hspec
 import           TestUtil
 

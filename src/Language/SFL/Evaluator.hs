@@ -1,6 +1,6 @@
-module SFL.Evaluator where
+module Language.SFL.Evaluator where
 
-import           SFL.Type
+import           Language.SFL.Type
 
 eval :: RecordField a => RecordOf a -> Expr a -> Value
 eval record (RecordE r) = recordValue record r

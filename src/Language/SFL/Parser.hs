@@ -2,12 +2,15 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeFamilies          #-}
-module SFL.Parser where
+module Language.SFL.Parser
+  ( typeCheck
+  , expr
+  ) where
 
 import           Control.Monad.State.Lazy
 import           Data.Maybe
-import           SFL.Lexer
-import           SFL.Type                 as SFLPT
+import           Language.SFL.Lexer
+import           Language.SFL.Type        as SFLPT
 import           Text.Megaparsec
 
 
@@ -34,7 +37,28 @@ typeCheck (InfixE f (x1, x2)) =
     _ -> customFailure $ BadNumberOfArguments (fName f) 2 (nArgs f)
 typeCheck _ = pure ()
 
-
+function :: (Eq a, RecordField a) => SFLP a (Expr a)
+function = do
+  name <- identifier
+  f <- checkName name
+  args <- sequence $ do
+    i <- [1..(nArgs f - 1)]
+    pure $ do
+      (e, hasParens) <- expr'
+      case e of
+        InfixE _ _
+          | not hasParens -> customFailure NakedInfixInsideFunction
+          | otherwise -> pure e
+        _ -> pure e
+  exp <- do
+    (e, hasParens) <- expr'
+    pure $ case e of
+      InfixE f2 (x1, x2)
+        | not hasParens -> InfixE f2 (FunctionE f (args ++ [x1]), x2)
+        | otherwise -> FunctionE f (args ++ [e])
+      _ -> FunctionE f (args ++ [e])
+  typeCheck exp
+  pure exp
 
 expr' :: (Eq a, RecordField a) => SFLP a (Expr a, Bool)
 expr' = do
@@ -65,28 +89,7 @@ expr' = do
       pure theExpr
     Nothing -> pure (e1, isJust mlp)
   where
-    nonInfix = choice [ RecordE <$> try recordId, LiteralE <$> literal, pFunction ]
-    pFunction = do
-      name <- identifier
-      f <- checkName name
-      args <- sequence $ do
-        i <- [1..(nArgs f - 1)]
-        pure $ do
-          (e, hasParens) <- expr'
-          case e of
-            InfixE _ _
-              | not hasParens -> customFailure NakedInfixInsideFunction
-              | otherwise -> pure e
-            _ -> pure e
-      exp <- do
-        (e, hasParens) <- expr'
-        pure $ case e of
-          InfixE f2 (x1, x2)
-            | not hasParens -> InfixE f2 (FunctionE f (args ++ [x1]), x2)
-            | otherwise -> FunctionE f (args ++ [e])
-          _ -> FunctionE f (args ++ [e])
-      typeCheck exp
-      pure exp
+    nonInfix = choice [ RecordE <$> try recordId, LiteralE <$> literal, function ]
 
 expr :: (Eq a, RecordField a) => SFLP a (Expr a)
 expr = fst <$> expr'

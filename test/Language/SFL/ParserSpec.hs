@@ -1,10 +1,10 @@
 {-# LANGUAGE TypeFamilies #-}
-module SFL.ParserSpec where
+module Language.SFL.ParserSpec where
 
 import           Data.Either
-import           SFL.Parser
-import           SFL.Printer
-import           SFL.Type
+import           Language.SFL.Parser
+import           Language.SFL.Printer
+import           Language.SFL.Type
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck

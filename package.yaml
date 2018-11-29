@@ -26,10 +26,15 @@ dependencies:
 - parser-combinators
 - mtl
 - containers
+- template-haskell
+- casing
 
 default-extensions:
+- LambdaCase
+- MultiWayIf
 - TypeFamilies
 - FlexibleInstances
+- RecordWildCards
 
 library:
   source-dirs: src

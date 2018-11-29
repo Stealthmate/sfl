@@ -1,7 +1,7 @@
-module SFL.Printer where
+module Language.SFL.Printer where
 
-import           SFL.Type
-import           SFL.Util
+import           Language.SFL.Type
+import           Language.SFL.Util
 
 class PrintExpr e where
   printExpr :: e -> String
